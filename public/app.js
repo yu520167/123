@@ -8,7 +8,7 @@ let monthlyTrendChart = null;
 let expenseCategoryChart = null;
 
 // API 基础配置
-const API_BASE = '/api';
+const API_BASE = window.APP_CONFIG ? window.APP_CONFIG.API_BASE_URL : '/api';
 
 // 工具函数
 function formatCurrency(amount) {
