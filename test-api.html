@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>班费管理系统API测试</h1>
+    
+    <div class="test-section">
+        <h3>1. 登录测试</h3>
+        <input type="text" id="username" placeholder="用户名" value="admin">
+        <input type="password" id="password" placeholder="密码" value="admin123">
+        <button onclick="testLogin()">测试登录</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 添加记录测试</h3>
+        <input type="date" id="testDate" placeholder="日期">
+        <input type="text" id="testDescription" placeholder="事项说明" value="测试记录">
+        <input type="number" id="testAmount" placeholder="收入金额" value="100">
+        <input type="number" id="testExpense" placeholder="支出金额" value="0">
+        <input type="text" id="testHandler" placeholder="经手人" value="张三">
+        <input type="text" id="testWitness" placeholder="证明人" value="李四">
+        <button onclick="testAddTransaction()">测试添加记录</button>
+        <div id="addResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 获取记录测试</h3>
+        <button onclick="testGetTransactions()">获取记录列表</button>
+        <div id="getResult" class="result"></div>
+    </div>
+
+    <script>
+        let token = '';
+        
+        // 设置默认日期
+        document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+        
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    token = data.token;
+                    document.getElementById('loginResult').innerHTML = `
+                        <strong>登录成功！</strong><br>
+                        用户: ${data.user.username}<br>
+                        角色: ${data.user.role}<br>
+                        Token: ${token.substring(0, 20)}...
+                    `;
+                } else {
+                    document.getElementById('loginResult').innerHTML = `<strong>登录失败：</strong> ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = `<strong>登录错误：</strong> ${error.message}`;
+            }
+        }
+        
+        async function testAddTransaction() {
+            if (!token) {
+                document.getElementById('addResult').innerHTML = '<strong>请先登录</strong>';
+                return;
+            }
+            
+            const formData = {
+                date: document.getElementById('testDate').value,
+                description: document.getElementById('testDescription').value,
+                amount: parseFloat(document.getElementById('testAmount').value) || 0,
+                expense: parseFloat(document.getElementById('testExpense').value) || 0,
+                handler: document.getElementById('testHandler').value,
+                witness: document.getElementById('testWitness').value
+            };
+            
+            // 确定类型和金额
+            const type = formData.amount > 0 ? 'income' : 'expense';
+            const amount = formData.amount > 0 ? formData.amount : formData.expense;
+            
+            const transactionData = {
+                type: type,
+                amount: amount,
+                description: formData.description,
+                date: formData.date,
+                handler: formData.handler,
+                witness: formData.witness,
+                category: '测试'
+            };
+            
+            try {
+                const response = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(transactionData)
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('addResult').innerHTML = `
+                        <strong>添加成功！</strong><br>
+                        记录ID: ${data.transactionId}<br>
+                        数据: ${JSON.stringify(transactionData, null, 2)}
+                    `;
+                } else {
+                    document.getElementById('addResult').innerHTML = `<strong>添加失败：</strong> ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('addResult').innerHTML = `<strong>添加错误：</strong> ${error.message}`;
+            }
+        }
+        
+        async function testGetTransactions() {
+            if (!token) {
+                document.getElementById('getResult').innerHTML = '<strong>请先登录</strong>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/transactions', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('getResult').innerHTML = `
+                        <strong>获取成功！</strong><br>
+                        记录数量: ${data.transactions.length}<br>
+                        数据: <pre>${JSON.stringify(data.transactions, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('getResult').innerHTML = `<strong>获取失败：</strong> ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('getResult').innerHTML = `<strong>获取错误：</strong> ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

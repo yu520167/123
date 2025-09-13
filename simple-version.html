@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班费管理系统 - 简化版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.income h3 {
+            color: #28a745;
+        }
+
+        .stat-card.expense h3 {
+            color: #dc3545;
+        }
+
+        .stat-card.balance h3 {
+            color: #007bff;
+        }
+
+        .transactions-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .transaction-item.income {
+            border-left-color: #28a745;
+        }
+
+        .transaction-item.expense {
+            border-left-color: #dc3545;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .transaction-amount.income {
+            color: #28a745;
+        }
+
+        .transaction-amount.expense {
+            color: #dc3545;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 班费管理系统</h1>
+            <p>简单易用的班级财务管理工具</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <!-- 统计概览 -->
+        <div class="stats-grid">
+            <div class="stat-card income">
+                <h3 id="totalIncome">¥0.00</h3>
+                <p>总收入</p>
+            </div>
+            <div class="stat-card expense">
+                <h3 id="totalExpense">¥0.00</h3>
+                <p>总支出</p>
+            </div>
+            <div class="stat-card balance">
+                <h3 id="currentBalance">¥0.00</h3>
+                <p>当前余额</p>
+            </div>
+        </div>
+
+        <!-- 功能标签页 -->
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('add')">添加记录</button>
+                <button class="tab" onclick="showTab('list')">记录列表</button>
+                <button class="tab" onclick="showTab('export')">数据导出</button>
+            </div>
+
+            <!-- 添加记录 -->
+            <div id="addTab" class="tab-content active">
+                <h3>添加班费记录</h3>
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label for="type">类型</label>
+                        <select id="type" name="type" required>
+                            <option value="">请选择</option>
+                            <option value="income">收入</option>
+                            <option value="expense">支出</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">金额</label>
+                        <input type="number" id="amount" name="amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">描述</label>
+                        <textarea id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">分类</label>
+                        <input type="text" id="category" name="category" placeholder="如：班费、活动费、文具等">
+                    </div>
+                    <button type="submit" class="btn btn-primary">添加记录</button>
+                </form>
+            </div>
+
+            <!-- 记录列表 -->
+            <div id="listTab" class="tab-content">
+                <h3>班费记录</h3>
+                <div class="form-group">
+                    <label for="filterType">筛选类型</label>
+                    <select id="filterType" onchange="filterTransactions()">
+                        <option value="">全部</option>
+                        <option value="income">收入</option>
+                        <option value="expense">支出</option>
+                    </select>
+                </div>
+                <div class="transactions-list" id="transactionsList">
+                    <p style="text-align: center; color: #666; padding: 40px;">暂无记录</p>
+                </div>
+            </div>
+
+            <!-- 数据导出 -->
+            <div id="exportTab" class="tab-content">
+                <h3>数据导出</h3>
+                <p>将班费数据导出为CSV文件，方便备份和分享。</p>
+                <button class="btn btn-success" onclick="exportData()">导出CSV文件</button>
+                <button class="btn btn-secondary" onclick="clearAllData()">清空所有数据</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储
+        let transactions = JSON.parse(localStorage.getItem('banfei_transactions') || '[]');
+
+        // 工具函数
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY'
+            }).format(amount);
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('zh-CN');
+        }
+
+        function showMessage(message, type = 'success') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // 标签页切换
+        function showTab(tabName) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 移除所有标签的活动状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示目标标签页
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // 如果是记录列表标签页，刷新列表
+            if (tabName === 'list') {
+                displayTransactions();
+            }
+        }
+
+        // 更新统计
+        function updateStats() {
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            
+            const balance = totalIncome - totalExpense;
+            
+            document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+            document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
+            document.getElementById('currentBalance').textContent = formatCurrency(balance);
+        }
+
+        // 显示记录列表
+        function displayTransactions(filterType = '') {
+            const container = document.getElementById('transactionsList');
+            let filteredTransactions = transactions;
+            
+            if (filterType) {
+                filteredTransactions = transactions.filter(t => t.type === filterType);
+            }
+            
+            if (filteredTransactions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">暂无记录</p>';
+                return;
+            }
+            
+            // 按日期倒序排列
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            container.innerHTML = filteredTransactions.map(transaction => `
+                <div class="transaction-item ${transaction.type}">
+                    <div class="transaction-info">
+                        <div style="font-weight: 500;">${transaction.description}</div>
+                        <div style="font-size: 0.9rem; color: #666;">
+                            ${formatDate(transaction.date)} • ${transaction.category || '未分类'}
+                        </div>
+                    </div>
+                    <div class="transaction-amount ${transaction.type}">
+                        ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                        <button class="btn btn-danger" style="margin-left: 10px; padding: 5px 10px; font-size: 0.8rem;" 
+                                onclick="deleteTransaction('${transaction.id}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 筛选记录
+        function filterTransactions() {
+            const filterType = document.getElementById('filterType').value;
+            displayTransactions(filterType);
+        }
+
+        // 添加记录
+        function addTransaction(formData) {
+            const transaction = {
+                id: Date.now().toString(),
+                type: formData.type,
+                amount: parseFloat(formData.amount),
+                description: formData.description,
+                category: formData.category,
+                date: new Date().toISOString()
+            };
+            
+            transactions.push(transaction);
+            localStorage.setItem('banfei_transactions', JSON.stringify(transactions));
+            
+            updateStats();
+            showMessage('记录添加成功！', 'success');
+            
+            // 清空表单
+            document.getElementById('transactionForm').reset();
+        }
+
+        // 删除记录
+        function deleteTransaction(id) {
+            if (confirm('确定要删除这条记录吗？')) {
+                transactions = transactions.filter(t => t.id !== id);
+                localStorage.setItem('banfei_transactions', JSON.stringify(transactions));
+                updateStats();
+                displayTransactions();
+                showMessage('记录删除成功！', 'success');
+            }
+        }
+
+        // 导出数据
+        function exportData() {
+            if (transactions.length === 0) {
+                showMessage('暂无数据可导出', 'error');
+                return;
+            }
+            
+            const csvContent = [
+                ['日期', '类型', '金额', '描述', '分类'].join(','),
+                ...transactions.map(t => [
+                    formatDate(t.date),
+                    t.type === 'income' ? '收入' : '支出',
+                    t.amount,
+                    `"${t.description}"`,
+                    `"${t.category || ''}"`
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `班费记录_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showMessage('数据导出成功！', 'success');
+        }
+
+        // 清空所有数据
+        function clearAllData() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                transactions = [];
+                localStorage.removeItem('banfei_transactions');
+                updateStats();
+                displayTransactions();
+                showMessage('所有数据已清空', 'success');
+            }
+        }
+
+        // 事件监听
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                type: document.getElementById('type').value,
+                amount: document.getElementById('amount').value,
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value
+            };
+            
+            if (!formData.type || !formData.amount || !formData.description) {
+                showMessage('请填写完整信息', 'error');
+                return;
+            }
+            
+            addTransaction(formData);
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            displayTransactions();
+        });
+    </script>
+</body>
+</html>
+

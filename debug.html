@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>班费管理系统调试页面</h1>
+    
+    <div class="test-section">
+        <h3>1. 测试API连接</h3>
+        <button onclick="testAPI()">测试登录API</button>
+        <div id="apiResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 测试登录功能</h3>
+        <input type="text" id="testUsername" placeholder="用户名" value="admin">
+        <input type="password" id="testPassword" placeholder="密码" value="admin123">
+        <button onclick="testLogin()">测试登录</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 检查控制台错误</h3>
+        <p>请打开浏览器开发者工具（F12）查看控制台是否有错误信息</p>
+        <button onclick="checkConsole()">检查控制台</button>
+        <div id="consoleResult" class="result"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `
+                    <strong>API测试结果：</strong><br>
+                    状态码: ${response.status}<br>
+                    响应: ${JSON.stringify(data, null, 2)}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>API测试失败：</strong> ${error.message}`;
+            }
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    resultDiv.innerHTML = `
+                        <strong>登录成功！</strong><br>
+                        用户: ${data.user.username}<br>
+                        角色: ${data.user.role}<br>
+                        Token已保存到localStorage
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<strong>登录失败：</strong> ${error.error}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>登录错误：</strong> ${error.message}`;
+            }
+        }
+        
+        function checkConsole() {
+            const resultDiv = document.getElementById('consoleResult');
+            resultDiv.innerHTML = `
+                <strong>控制台检查：</strong><br>
+                请按F12打开开发者工具，查看Console标签页是否有红色错误信息。<br>
+                如果有错误，请截图或复制错误信息。
+            `;
+        }
+        
+        // 页面加载时自动测试
+        window.addEventListener('load', function() {
+            console.log('调试页面已加载');
+            testAPI();
+        });
+    </script>
+</body>
+</html>

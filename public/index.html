@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班费管理系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 登录页面 -->
+        <div id="loginPage" class="page">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <i class="fas fa-coins"></i>
+                        <h1>班费管理系统</h1>
+                        <p>班级财务管理平台</p>
+                    </div>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="username">用户名</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">密码</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i>
+                            登录
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主应用页面 -->
+        <div id="mainPage" class="page" style="display: none;">
+            <!-- 导航栏 -->
+            <nav class="navbar">
+                <div class="nav-brand">
+                    <i class="fas fa-coins"></i>
+                    <span>班费管理系统</span>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-item active" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        仪表板
+                    </button>
+                    <button class="nav-item" data-page="transactions">
+                        <i class="fas fa-list"></i>
+                        记录管理
+                    </button>
+                    <button class="nav-item" data-page="users" id="usersNav" style="display: none;">
+                        <i class="fas fa-users"></i>
+                        用户管理
+                    </button>
+                    <button class="nav-item" data-page="reports">
+                        <i class="fas fa-chart-bar"></i>
+                        统计报表
+                    </button>
+                </div>
+                <div class="nav-user">
+                    <span id="currentUser"></span>
+                    <button id="logoutBtn" class="btn btn-outline">
+                        <i class="fas fa-sign-out-alt"></i>
+                        退出
+                    </button>
+                </div>
+            </nav>
+
+        <!-- 仪表板页面 -->
+        <div id="dashboardPage" class="content-page">
+            <div class="dashboard-container">
+                <!-- 统计概览卡片 -->
+                <div class="stats-overview-card">
+                    <h3>班费统计概览</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">当前结余</span>
+                            <span class="stat-value" id="currentBalance">¥0.00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总收入</span>
+                            <span class="stat-value" id="totalIncome">¥0.00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总支出</span>
+                            <span class="stat-value" id="totalExpense">¥0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收支比例图表卡片 -->
+                <div class="chart-card">
+                    <h3>收支比例</h3>
+                    <div class="chart-container">
+                        <canvas id="incomeExpenseChart" width="200" height="200"></canvas>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-color income-color"></span>
+                                <span>收入</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color expense-color"></span>
+                                <span>支出</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- 记录管理页面 -->
+            <div id="transactionsPage" class="content-page" style="display: none;">
+                <div class="transactions-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <h2>记录管理</h2>
+                    </div>
+                    
+                    <!-- 添加记录表单 -->
+                    <div class="add-record-card admin-only">
+                        <h3>添加新记录</h3>
+                        <form id="transactionForm" class="record-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="transactionDate">日期</label>
+                                    <input type="date" id="transactionDate" name="date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transactionDescription">事项说明</label>
+                                    <input type="text" id="transactionDescription" name="description" placeholder="例如:购买班会用品" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transactionType">类型</label>
+                                    <select id="transactionType" name="type" required onchange="toggleAmountFields()">
+                                        <option value="">请选择</option>
+                                        <option value="income">收入</option>
+                                        <option value="expense">支出</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transactionAmount">金额(元)</label>
+                                    <input type="number" id="transactionAmount" name="amount" step="0.01" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transactionHandler">经手人</label>
+                                    <input type="text" id="transactionHandler" name="handler" placeholder="填写经手人姓名" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="transactionWitness">证明人</label>
+                                    <input type="text" id="transactionWitness" name="witness" placeholder="填写证明人姓名" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transactionCategory">分类</label>
+                                    <input type="text" id="transactionCategory" name="category" placeholder="如：班费、活动费、文具等">
+                                </div>
+                                <div class="form-group">
+                                    <label for="transactionImage">上传凭证图片</label>
+                                    <input type="file" id="transactionImage" name="image" accept="image/*" onchange="previewImage(this)">
+                                    <div id="imagePreview" class="image-preview" style="display: none;">
+                                        <img id="previewImg" src="" alt="预览图片">
+                                        <button type="button" onclick="removeImage()" class="remove-image-btn">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-primary" onclick="submitTransactionForm()">添加记录</button>
+                                <button type="button" class="btn btn-secondary" onclick="clearForm()">清空表单</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 班费明细表 -->
+                    <div class="transactions-table-card">
+                        <div class="table-header">
+                            <h3>班费明细表</h3>
+                            <div class="table-actions admin-only">
+                                <button class="btn btn-primary" onclick="exportToExcel()">导出为Excel</button>
+                                <button class="btn btn-success" onclick="printTable()">打印表格</button>
+                            </div>
+                        </div>
+                        
+                        <div class="filters">
+                            <select id="typeFilter">
+                                <option value="">所有类型</option>
+                                <option value="income">收入</option>
+                                <option value="expense">支出</option>
+                            </select>
+                            <input type="date" id="startDateFilter" placeholder="开始日期">
+                            <input type="date" id="endDateFilter" placeholder="结束日期">
+                            <button id="filterBtn" class="btn btn-secondary">筛选</button>
+                            <button id="clearFilterBtn" class="btn btn-outline">清除</button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>日期</th>
+                                        <th>事项说明</th>
+                                        <th>收入(元)</th>
+                                        <th>支出(元)</th>
+                                        <th>经手人</th>
+                                        <th>证明人</th>
+                                        <th>凭证图片</th>
+                                        <th>当前余额(元)</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsTableBody">
+                                    <!-- 动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination" id="transactionsPagination">
+                            <!-- 动态加载 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理页面 -->
+            <div id="usersPage" class="content-page" style="display: none;">
+                <div class="page-header">
+                    <h2>用户管理</h2>
+                    <button id="addUserBtn" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        添加用户
+                    </button>
+                </div>
+
+                <div class="users-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>用户名</th>
+                                <th>角色</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- 动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 统计报表页面 -->
+            <div id="reportsPage" class="content-page" style="display: none;">
+                <div class="reports-container">
+                    <div class="reports-header">
+                        <h2>统计报表</h2>
+                        <div class="report-filters">
+                            <input type="date" id="reportStartDate" placeholder="开始日期">
+                            <input type="date" id="reportEndDate" placeholder="结束日期">
+                            <button id="generateReportBtn" class="btn btn-primary">生成报表</button>
+                        </div>
+                    </div>
+
+                    <div class="reports-content">
+                        <!-- 统计概览 -->
+                        <div class="report-overview-card">
+                            <h3>收支统计概览</h3>
+                            <div class="overview-stats">
+                                <div class="overview-item">
+                                    <span class="overview-label">总收入</span>
+                                    <span class="overview-value income" id="reportIncome">¥0.00</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">总支出</span>
+                                    <span class="overview-value expense" id="reportExpense">¥0.00</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">净余额</span>
+                                    <span class="overview-value balance" id="reportBalance">¥0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 图表区域 -->
+                        <div class="charts-container">
+                            <div class="chart-card">
+                                <h3>月度收支趋势</h3>
+                                <canvas id="monthlyTrendChart" width="400" height="200"></canvas>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <h3>支出分类统计</h3>
+                                <canvas id="expenseCategoryChart" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 详细统计表 -->
+                        <div class="detailed-stats-card">
+                            <h3>详细统计</h3>
+                            <div class="stats-table-container">
+                                <table class="stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th>月份</th>
+                                            <th>收入</th>
+                                            <th>支出</th>
+                                            <th>净额</th>
+                                            <th>交易次数</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailedStatsBody">
+                                        <!-- 动态加载 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 图片查看模态框 -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content" style="max-width: 80%; max-height: 80%;">
+            <div class="modal-header">
+                <h3>凭证图片</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 20px;">
+                <img id="modalImage" src="" alt="凭证图片" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加用户</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="userUsername">用户名</label>
+                    <input type="text" id="userUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">密码</label>
+                    <input type="password" id="userPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">角色</label>
+                    <select id="userRole" name="role" required>
+                        <option value="member">普通成员</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline modal-close">取消</button>
+                    <button type="submit" class="btn btn-primary">创建用户</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
