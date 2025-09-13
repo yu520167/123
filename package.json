@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "npm run build:client",
-    "build:client": "webpack --mode production"
+    "build:client": "webpack --mode production",
+    "vercel-build": "echo 'Vercel build completed'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
