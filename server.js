@@ -9,7 +9,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = 'banfei_secret_key_2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'banfei_secret_key_2024';
 
 // 中间件
 app.use(cors());
@@ -17,9 +17,10 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 // 配置multer用于文件上传
+const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads' : 'public/uploads';
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads/') // 上传文件保存目录
+    cb(null, uploadDir) // 上传文件保存目录
   },
   filename: function (req, file, cb) {
     // 生成唯一文件名
@@ -44,7 +45,8 @@ const upload = multer({
 });
 
 // 数据库初始化
-const db = new sqlite3.Database('banfei.db');
+const dbPath = process.env.NODE_ENV === 'production' ? '/tmp/banfei.db' : 'banfei.db';
+const db = new sqlite3.Database(dbPath);
 
 // 创建表
 db.serialize(() => {
@@ -229,7 +231,7 @@ app.post('/api/transactions', authenticateToken, upload.single('image'), (req, r
 
   // 如果有上传的图片，保存路径
   if (req.file) {
-    imagePath = '/uploads/' + req.file.filename;
+    imagePath = process.env.NODE_ENV === 'production' ? '/tmp/uploads/' + req.file.filename : '/uploads/' + req.file.filename;
   }
 
   console.log('接收到的数据:', { type, amount, description, category, date, handler, witness, imagePath });
@@ -395,6 +397,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`班费管理系统服务器运行在 http://localhost:${PORT}`);
-});
+// 本地开发时启动服务器
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`班费管理系统服务器运行在 http://localhost:${PORT}`);
+  });
+}
+
+// Vercel导出
+module.exports = app;
