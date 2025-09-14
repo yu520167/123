@@ -15,7 +15,14 @@ const CONFIG = {
 
 // 自动检测环境
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isVercel = window.location.hostname.includes('vercel.app');
 const currentConfig = isLocal ? CONFIG.local : CONFIG.production;
+
+// 如果是Vercel环境，使用当前域名作为API地址
+if (isVercel) {
+  currentConfig.API_BASE_URL = `${window.location.protocol}//${window.location.hostname}/api`;
+  currentConfig.UPLOAD_BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
+}
 
 // 导出配置
 window.APP_CONFIG = currentConfig;
