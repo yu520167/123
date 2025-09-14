@@ -2,19 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "public/**/*",
-      "use": "@vercel/static"
+      "src": "server.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
-  ],
-  "functions": {
-    "public/api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 }
